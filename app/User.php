@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\UserGames;
 
 class User extends Authenticatable
 {
@@ -32,9 +33,25 @@ class User extends Authenticatable
         return $this->hasMany('App\Game')->withPivot('word');
     }
 
-    public function game_list()
+    public function game_list($status = null)
     {
-        return $this->hasMany('App\UserGames');
+        if ($status == 'active')
+        {
+            return UserGames::fromView()->where('player_id', $this->id)->where('status', '!=', 'finished')->get();
+        }
+        else if ($status == 'finished')
+        {
+            return UserGames::fromView()->where('player_id', $this->id)->where('status', 'finished')->get();
+        }
+        else
+        {
+            return UserGames::fromView()->where('player_id', $this->id)->get();
+        }
+    }
+
+    public function game($gameId)
+    {
+        return UserGames::fromView()->where('player_id', $this->id)->where('game_id', $gameId)->get()->first();
     }
 
     /*

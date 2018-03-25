@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Game;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class GameController extends Controller
 {
@@ -14,7 +15,8 @@ class GameController extends Controller
      */
     public function index()
     {
-        //
+        $gameList = Auth::user()->game_list();
+        return view('games.index', ['gameList' => $gameList]);
     }
 
     /**
@@ -44,9 +46,12 @@ class GameController extends Controller
      * @param  \App\Game  $game
      * @return \Illuminate\Http\Response
      */
-    public function show(Game $game)
+    public function show($gameId)
     {
-        //
+        $game = Game::find($gameId);
+        $playerGame = Auth::user()->game($game->id);
+        $moves = $game->playerMoves(Auth::user()->id)->get();
+        return view('games.show', ['playerGame' => $playerGame, 'moves' => $moves]);
     }
 
     /**

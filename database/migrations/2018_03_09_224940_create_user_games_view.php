@@ -15,7 +15,7 @@ class CreateUserGamesView extends Migration
     {
         DB::statement("CREATE VIEW `user_games`  AS
         (
-            select `p1`.`id` AS `my_id`,`g`.`id` AS `id`,`g`.`max_length` AS `max_length`,
+            select `p1`.`id` AS `player_id`,`g`.`id` AS `game_id`,`g`.`max_length` AS `max_length`,
                    `g`.`max_recurrance` AS `max_recurrance`,`g`.`started_by` AS `started_by`,
                    `g`.`started_at` AS `started_at`,`g`.`turn` AS `turn`,`g`.`status` AS `status`,
                    `g`.`created_at` AS `created_at`,`g`.`updated_at` AS `updated_at`,

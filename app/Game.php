@@ -12,4 +12,9 @@ class Game extends Model
     {
         return $this->belongsToMany('App\User')->withPivot('word');
     }
+
+    public function playerMoves($playerId)
+    {
+        return $this->hasMany('App\PlayerMoves')->where('user_id', $playerId);
+    }
 }
