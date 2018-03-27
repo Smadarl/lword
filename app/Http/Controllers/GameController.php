@@ -37,7 +37,10 @@ class GameController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->validate(request(), [
+            'gameId' => 'required',
+            'guess' => 'required|min:4|max:20',
+        ]);
     }
 
     /**
@@ -46,9 +49,8 @@ class GameController extends Controller
      * @param  \App\Game  $game
      * @return \Illuminate\Http\Response
      */
-    public function show($gameId)
+    public function show(\App\Game $game)
     {
-        $game = Game::find($gameId);
         $playerGame = Auth::user()->game($game->id);
         $moves = $game->playerMoves(Auth::user()->id)->get();
         return view('games.show', ['playerGame' => $playerGame, 'moves' => $moves]);

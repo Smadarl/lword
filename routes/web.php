@@ -19,4 +19,4 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/games', 'GameController@index')->name('games');
-Route::get('/game/{id}', 'GameController@show')->name('game');
+Route::resource('/game', 'GameController', ['only' => ['show', 'store']]);
