@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
         DB::listen(function($query) {
             file_put_contents("/tmp/queries.log", $query->sql . "\n", FILE_APPEND);
         });
+	Schema::defaultStringLength(191);
         //
     }
 
