@@ -41,6 +41,40 @@ class GameController extends Controller
             'gameId' => 'required',
             'guess' => 'required|min:4|max:20',
         ]);
+        $playerGame = Auth::user()->game($request->input('gameId'));
+        if (!$playerGame) {
+            return response('', 401)->json(['error' => 'Invalid game id']);
+        }
+        $opponent = \App\GameUser::findOpponentByUserGame($playerGame);
+        if (!$opponent) {
+            return response('', 422)->json(['error' => 'Invalid opponent']);
+        }
+        $result = 0;
+        if ($opponent->word === $request->input('guess')) {
+            // win
+            $result = strlen($opponent->word);
+        }
+        else
+        {
+            $result = self::compareWord($opponent->word, $request->input('guess'));
+        }
+
+        return ['message' => "Successful ($result)", 'result' => $result];
+    }
+
+    static public function compareWord($gameWord, $guess)
+    {
+        $gameLetters = str_split($gameWord);
+        $eachLetter = str_split($guess);
+        $count = 0;
+        foreach($eachLetter as $letter)
+        {
+            if (($idx = array_search($letter, $gameLetters, true)) !== false) {
+                $count++;
+                unset($gameLetters[$idx]);
+            }
+        }
+        return $count;
     }
 
     /**
@@ -52,6 +86,7 @@ class GameController extends Controller
     public function show(\App\Game $game)
     {
         $playerGame = Auth::user()->game($game->id);
+        file_put_contents("/tmp/rob.log", print_r($playerGame, true), FILE_APPEND);
         $moves = $game->playerMoves(Auth::user()->id)->get();
         return view('games.show', ['playerGame' => $playerGame, 'moves' => $moves]);
     }

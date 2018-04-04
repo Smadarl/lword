@@ -15,7 +15,32 @@ window.Vue = require('vue');
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-Vue.component('example-component', require('./components/ExampleComponent.vue'));
+//Vue.component('example-component', require('./components/ExampleComponent.vue'));
+
+Vue.component('guess-box', {
+    props: ['gameId'],
+    data() {
+        return {
+            guess: '',
+            gameid: this.gameId,
+            errors: {}
+        };
+    },
+    methods: {
+        onSubmit() {
+            console.log(this.$data);
+            axios.post('/game/move', {
+                gameId: this.gameid,
+                guess: this.guess
+            })
+                .then(response => alert('Success'))
+                .catch(error => {
+                    this.errors = error.response.data;
+                    console.log(error.response);
+                });
+        }
+    }
+});
 
 const app = new Vue({
     el: '#app'

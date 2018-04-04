@@ -16,8 +16,17 @@
                             </tr>
                         @endforeach
                     </table>
-
                 </div>
+
+                <guess-box game-id="{{ $playerGame->game_id }}" inline-template>
+                    <div>
+                        <span>This is a test</span>
+                        <form method="POST" action="/game/move" @submit.prevent="onSubmit">
+                            <input type="text" id="guess" name="guess" class="input" v-model="guess"/>
+                            <button class="button is-primary">Submit</button>
+                        </form>
+                    </div>
+                </guess-box>
 
                 <div class="card-body">
                     @if (session('status'))
@@ -26,7 +35,6 @@
                         </div>
                     @endif
 
-<!--                    You are logged in! -->
                 </div>
             </div>
         </div>
