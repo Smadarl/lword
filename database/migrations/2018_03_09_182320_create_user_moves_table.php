@@ -19,7 +19,8 @@ class CreateUserMovesTable extends Migration
             $table->string('guess', 40);
             $table->tinyInteger('result');
             $table->timestamps();
-            $table->index(['user_id', 'game_id']);
+            $table->index(['game_id', 'user_id']);
+            $table->index(['user_id']);
         });
     }
 

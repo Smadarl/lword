@@ -26,9 +26,43 @@ class GameController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        $this->validate(request(), [
+            'opponentid' => 'required|integer',
+            'maxrecur' => 'required|integer|min:1|max:4',
+            'maxlength' => 'required|integer|min:6|max:12',
+            'origination' => 'required'
+        ]);
+        if ($request->input('origination') == 'choose') {
+            $this->validate(request(), [
+                'myword' => 'required|min:6|max:' . $request->input('maxlength')
+            ]);
+        }
+        $gameId = DB::table('games')->insertGetId([
+            'max_length' => $request->input('maxlength'),
+            'max_recurrance' => $request->input('maxrecur'),
+            'started_by' => Auth::id(),
+            'started_at' => date('Y-m-d H:i:s'),
+            'turn' => array(Auth::id(), $request->input('opponentid'))[rand(0,1)],
+            'status' => 'pending',
+        ]);
+        if ($request->input('origination') == 'choose') {
+            $word = $request->input('myword');
+        } else {
+            $word = 'internationalization'; // TODO: randomize this
+        }
+        DB::table('game_user')->insert([
+            'game_id' => $gameId,
+            'user_id' => Auth::id(),
+            'word' => $word
+        ]);
+        DB::table('game_user')->insert([
+            'game_id' => $gameId,
+            'user_id' => $request->input('opponentid'),
+            'word' => 'none'
+        ]);
+        return Auth::user()->userGame($gameId);
     }
 
     /**
@@ -43,7 +77,7 @@ class GameController extends Controller
             'gameId' => 'required',
             'guess' => 'required|min:4|max:20',
         ]);
-        $guess = $request->input('guess');
+        $guess = strtolower($request->input('guess'));
         $userGame = Auth::user()->userGame($request->input('gameId'));
         if ($userGame->turn !== Auth::user()->id) {
             return response()->json(['error' => 'Not your turn.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
@@ -113,7 +147,7 @@ class GameController extends Controller
     public function moves(Request $request, $id)
     {
         file_put_contents('/tmp/rob.log', var_export($id, true), FILE_APPEND);
-        
+
         $userGame = Auth::user()->userGame($id);
         if (!$userGame) {
             return response()->json(['error' => 'Invalid game for moves'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);

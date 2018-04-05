@@ -51,12 +51,17 @@ class User extends Authenticatable
 
     public function game($gameId)
     {
-        
+
     }
 
     public function userGame($gameId)
     {
         return UserGames::fromView()->where('player_id', $this->id)->where('game_id', $gameId)->get()->first();
+    }
+
+    public function friends()
+    {
+        return UserFriends::fromView()->where('user_id', $this->id)->get();
     }
 
     /*

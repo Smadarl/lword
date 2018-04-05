@@ -16,3 +16,32 @@
 li.my-turn > a {
   color: green;
 }
+
+.clickable {
+  cursor: pointer;
+}
+
+ul.letter-list {
+  list-style-type: none;
+  margin: 2px;
+  padding: 0px;
+}
+
+ul.letter-list > li.letter {
+  float: left;
+  padding: 4px;
+}
+
+.letter-state--1 {
+  font-weight: bold;
+  color: red;
+}
+
+.letter-state-0 {
+  color: gray;
+}
+
+.letter-state-1, .letter-state-2, .letter-state-3 {
+  font-weight: bold;
+  color: green;
+}
