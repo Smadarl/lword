@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Game;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class GameController extends Controller
 {
@@ -41,25 +43,31 @@ class GameController extends Controller
             'gameId' => 'required',
             'guess' => 'required|min:4|max:20',
         ]);
-        $playerGame = Auth::user()->game($request->input('gameId'));
-        if (!$playerGame) {
-            return response('', 401)->json(['error' => 'Invalid game id']);
+        $guess = $request->input('guess');
+        $userGame = Auth::user()->userGame($request->input('gameId'));
+        if ($userGame->turn !== Auth::user()->id) {
+            return response()->json(['error' => 'Not your turn.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
-        $opponent = \App\GameUser::findOpponentByUserGame($playerGame);
+        if (!$userGame) {
+            return response()->json(['error' => 'Invalid game id.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        $opponent = \App\GameUser::findOpponentByUserGame($userGame);
         if (!$opponent) {
-            return response('', 422)->json(['error' => 'Invalid opponent']);
+            return response()->json(['error' => 'Invalid opponent.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
         $result = 0;
-        if ($opponent->word === $request->input('guess')) {
+        if ($opponent->word === $guess) {
             // win
             $result = strlen($opponent->word);
         }
         else
         {
-            $result = self::compareWord($opponent->word, $request->input('guess'));
+            $result = self::compareWord($opponent->word, $guess);
         }
+        $this->saveWord($userGame, $guess, $result);
+        $this->updateGameTurn($userGame, $userGame->opponent_id);
 
-        return ['message' => "Successful ($result)", 'result' => $result];
+        return ['message' => "Saved move.", 'result' => $result, 'guess' => $guess];
     }
 
     static public function compareWord($gameWord, $guess)
@@ -77,6 +85,19 @@ class GameController extends Controller
         return $count;
     }
 
+    private function saveWord(\App\UserGames $userGame, $word, $result)
+    {
+        DB::table('user_moves')->insert([
+            'game_id' => $userGame->game_id, 'user_id' => $userGame->player_id,
+            'guess' => $word, 'result' => $result
+        ]);
+    }
+
+    private function updateGameTurn(\App\UserGames $userGame, $playerId)
+    {
+        DB::table('games')->where('id', $userGame->game_id)->update(['turn' => $playerId]);
+    }
+
     /**
      * Display the specified resource.
      *
@@ -85,10 +106,21 @@ class GameController extends Controller
      */
     public function show(\App\Game $game)
     {
-        $playerGame = Auth::user()->game($game->id);
-        file_put_contents("/tmp/rob.log", print_r($playerGame, true), FILE_APPEND);
+        $userGame = Auth::user()->userGame($game->id);
+        return view('games.show', ['playerGame' => $userGame, 'moves' => []]);
+    }
+
+    public function moves(Request $request, $id)
+    {
+        file_put_contents('/tmp/rob.log', var_export($id, true), FILE_APPEND);
+        
+        $userGame = Auth::user()->userGame($id);
+        if (!$userGame) {
+            return response()->json(['error' => 'Invalid game for moves'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        $game = \App\Game::where('id', $id)->get()->first();
         $moves = $game->playerMoves(Auth::user()->id)->get();
-        return view('games.show', ['playerGame' => $playerGame, 'moves' => $moves]);
+        return $moves;
     }
 
     /**

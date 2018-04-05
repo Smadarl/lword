@@ -9,7 +9,7 @@
                         <h2>Games</h2>
                         <ul>
                             @foreach($gameList as $game)
-                                <li>
+                                <li class="opponent-name @if ($game->turn == Auth::id()) my-turn @endif">
                                     <a href="/game/{{ $game->game_id }}">{{ $game->opponent_name }}</a>
                                 </li>
                             @endforeach
