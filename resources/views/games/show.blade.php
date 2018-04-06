@@ -30,6 +30,9 @@
                             <button class="button is-primary">Submit</button>
                         </form>
                     </div>
+                    <div v-else>
+                        <button class="button is-primary" @click="checkTurn">Check turn</button>
+                    </div>
                 </guess-box>
 
                 <div class="card-body">

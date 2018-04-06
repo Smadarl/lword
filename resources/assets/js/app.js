@@ -145,6 +145,16 @@ Vue.component('guess-box', {
                     this.errors = error.response.data;
                     console.log(error.response);
                 });
+        },
+        checkTurn() {
+            axios.get('/game/' + this.gameid + '/info')
+                .then(response => {
+                    this.myturn = response.data.turn == this.myId;
+                })
+                .catch(error => {
+                    this.errors = error.response.data;
+                    console.log(error);
+                });
         }
     }
 });

@@ -157,6 +157,12 @@ class GameController extends Controller
         return $moves;
     }
 
+    public function info(Request $request, $id)
+    {
+        $userGame = Auth::user()->userGame($id);
+        return $userGame;
+    }
+
     /**
      * Show the form for editing the specified resource.
      *
