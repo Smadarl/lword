@@ -5,6 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
+                <a href="{{ route('games') }}">Games List</a>
                 <h2>Game with {{ $playerGame->opponent_name }}</h2>
                 <div class="card-header">
 
