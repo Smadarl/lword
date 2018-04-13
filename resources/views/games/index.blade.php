@@ -59,3 +59,7 @@
     </div>
 </div>
 @endsection
+
+@section('components')
+    <script src="{{ asset('js/game.js') }}" defer></script>
+@endsection

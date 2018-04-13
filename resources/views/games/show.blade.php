@@ -4,47 +4,54 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
-                <a href="{{ route('games') }}">Games List</a>
-                <h2>Game with {{ $playerGame->opponent_name }}</h2>
-                <div class="card-header">
+            <game game-id="{{ $playerGame->game_id }}" inline-template>
+                <div class="card">
+                    <a href="{{ route('games') }}">Games List</a>
+                    <h2>Game with {{ $playerGame->opponent_name }}</h2>
+                    <div class="card-header">
+                        <h3>Letters</h3>
 
-                    <h3>Letters</h3>
-                    <letter-list max-count="{{ $playerGame->max_recurrance }}" inline-template>
-                        <ul class="letter-list">
-                            <letter v-for="(count, letter) in letters" :the-letter="letter" :the-count="count" :key="letter">
-                            </letter>
-                        </ul>
-                    </letter-list>
+                        <letter-list inline-template>
+                            <div>
+                                <ul class="letter-list">
 
-                    <div style="clear: both"></div>
+                                    <letter v-for="(count, letter) in this.$store.state.letters" :the-letter="letter" :key="letter">
+                                    </letter>
 
-                    <move-list game-id="{{ $playerGame->game_id }}">
-                    </move-list>
-                </div>
+                                </ul>
+                                <button @click="save">Save</button>
+                            </div>
+                        </letter-list>
 
-                <guess-box game-turn="{{ $playerGame->turn }}" my-id="{{ $playerGame->player_id }}" game-id="{{ $playerGame->game_id }}" inline-template>
-                    <div v-if="this.myturn" >
-                        <h3>Your Turn</h3>
-                         <form method="POST" action="/game/move" @submit.prevent="onSubmit">
-                            <input type="text" id="guess" name="guess" class="input" v-model="guess"/>
-                            <button class="button is-primary">Submit</button>
-                        </form>
+                        <div style="clear: both"></div>
+
+                        <move-list>
+                        </move-list>
+
                     </div>
-                    <div v-else>
-                        <button class="button is-primary" @click="checkTurn">Check turn</button>
-                    </div>
-                </guess-box>
 
-                <div class="card-body">
-                    @if (session('status'))
-                        <div class="alert alert-success">
-                            {{ session('status') }}
+                    <guess-box inline-template>
+                        <div v-if="this.myturn" >
+                            <h3>Your Turn</h3>
+                            <form method="POST" action="/game/move" @submit.prevent="onSubmit">
+                                <input type="text" id="guess" name="guess" class="input" v-model="guess"/>
+                                <button class="button is-primary">Submit</button>
+                            </form>
                         </div>
-                    @endif
+                        <div v-else>
+                            <button class="button is-primary" @click="checkTurn">Check turn</button>
+                        </div>
+                    </guess-box>
 
+                    <div class="card-body">
+                        @if (session('status'))
+                            <div class="alert alert-success">
+                                {{ session('status') }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            </div>
+            </game>
         </div>
     </div>
 </div>

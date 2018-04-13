@@ -8,10 +8,30 @@ Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/games', 'GameController@index')->name('games');
-Route::resource('/game', 'GameController', ['only' => ['show', 'store']]);
 Route::get('game/{id}/moves', 'GameController@moves');
 Route::get('game/{id}/info', 'GameController@info');
 Route::get('user/friends', 'UserController@friends');
+Route::get('game/{id}/letters', 'GameController@getLetters');
 
-Route::post('/game/move', 'GameController@store');
+Route::view('user', 'user.index')->name('userProfile');
+
+Route::resource('/game', 'GameController', ['only' => ['show', 'store']]);
+
 Route::post('game/create', 'GameController@create');
+Route::post('game/{id}/letters', 'GameController@saveLetters');
+
+
+
+
+
+Route::get('api/game/{id}', 'GameController@gameData');
+Route::post('api/game/{id}/letters', 'GameController@saveLetters');
+Route::post('api/game/{id}/move', 'GameController@store');
+
+Route::get('api/user/info', 'UserController@info');
+Route::post('api/user/changepw', 'UserController@changepw');
+
+
+// TODO: fix these
+Route::post('api/game/{id}/move', 'GameController@saveMove');
+Route::post('api/game/create', 'GameController@create');
