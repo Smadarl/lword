@@ -1,6 +1,5 @@
 
-require('./bootstrap');
-
+import "./bootstrap";
 window.Vue = require('vue');
 window.Vuex = require('vuex');
 
@@ -56,7 +55,7 @@ const store = new Vuex.Store({
             state.moves.push(move);
         },
         setLetterCounts(state, letters) {
-            state.letters = Object.assign({}, letters);
+            state.letters = Object.assign(state.letters, letters);
         },
         incrementLetter(state, letter) {
             if (state.letters[letter] == state.game.maxRecur) {
