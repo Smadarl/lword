@@ -14,15 +14,21 @@ class GamesTableSeeder extends Seeder
         factory(App\Game::class, 10)->create()->each(function($g) {
             $p1 = App\User::find($g->started_by);
             $p2 = App\User::where('id', '<>', $g->started_by)->orderByRaw("RAND()")->first();
-            $g->players()->sync([$p1->id => ['word' => $this->getRandomWord()] ], false);
-            $g->players()->sync([$p2->id => ['word' => $this->getRandomWord()] ], false);
+            $g->players()->sync([$p1->id => ['word' => $this->getRandomWord($g)] ], false);
+            $g->players()->sync([$p2->id => ['word' => $this->getRandomWord($g)] ], false);
         });
     }
 
-    private function getRandomWord()
+    private function getRandomWord(App\Game $game)
     {
         $wf = env('WORD_FILE');
-        $word = trim(`shuf -n 1 $wf`);
+        $words = `shuf -n 500 $wf`;
+        foreach(explode("\n", $words) as $word) {
+            if ((strlen($word) > $game->max_length) || (strlen($word) < 6)) {
+                continue;
+            }
+            $chars = count_chars($word, 1);
+        }
         return $word;
     }
 }
