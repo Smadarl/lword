@@ -12,5 +12,6 @@ let mix = require('laravel-mix');
  */
 
 mix.js('resources/assets/js/game.js', 'public/js')
+    .js('resources/assets/js/game-list.js', 'public/js')
     .js('resources/assets/js/profile.js', 'public/js')
     .sass('resources/assets/sass/app.scss', 'public/css');

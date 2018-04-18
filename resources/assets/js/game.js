@@ -29,13 +29,6 @@ const store = new Vuex.Store({
         },
         moves: [],
         letters: allLetters,
-        newGame: {
-            opponentId: 0,
-            maxRecur: 0,
-            maxSize: 0,
-            origination: 'choose',
-            myWord: ''
-        },
         errors: []
     },
     mutations: {
@@ -218,48 +211,6 @@ Vue.component('guess-box', {
                 .catch(error => {
                     this.errors = error.response.data;
                     console.log(error);
-                });
-        }
-    }
-});
-
-Vue.component('start-game', {
-    data() {
-        return {
-            friends: [],
-            opponentid: 0,
-            maxrecur: 3,
-            maxlength: 10,
-            origination: 'choose',
-            myword: '',
-            errors: []
-        };
-    },
-    mounted() {
-        axios.get('/user/friends')
-            .then((response) => {
-                this.friends = response.data;
-            })
-            .catch(error => {
-                console.log(error);
-            });
-    },
-    methods: {
-        onSubmit() {
-            axios.post('/game/create', {
-                opponentid: this.opponentid,
-                maxrecur: this.maxrecur,
-                maxlength: this.maxlength,
-                origination: this.origination,
-                myword: this.myword
-            })
-                .then(response => {
-                    Event.$emit('newgame', response.data);
-                    // TODO: add a listener for this somewhere
-                })
-                .catch(error => {
-                    this.errors = error.response.data;
-                    console.log(error.response);
                 });
         }
     }

@@ -19,7 +19,7 @@ class CreateUserGamesView extends Migration
                    `g`.`max_recurrance` AS `max_recurrance`,`g`.`started_by` AS `started_by`,
                    `g`.`started_at` AS `started_at`,`g`.`turn` AS `turn`,`g`.`status` AS `status`,
                    `g`.`created_at` AS `created_at`,`g`.`updated_at` AS `updated_at`,
-                   `p2`.`id` AS `opponent_id`,`p2`.`name` AS `opponent_name`
+                   `p2`.`id` AS `opponent_id`,`p2`.`name` AS `opponent_name`, `gp1`.`letters` AS `letters`
             from
             (
                 (

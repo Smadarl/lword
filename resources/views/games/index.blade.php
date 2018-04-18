@@ -23,8 +23,12 @@
                             </div>
                         @endif
 
+                        <pending-friend-requests>
+                        </pending-friend-requests>
+
                         <start-game inline-template>
                             <div>
+                                <h2>Start A New Game</h2>
                                 <form method="POST" action="/game/create" @submit.prevent="onSubmit">
                                     <label for="friend">Friend</label>
                                     <select id="friend" v-model="opponentid">
@@ -53,6 +57,9 @@
                                 </form>
                             </div>
                         </start-game>
+
+                        <add-friend>
+                        </add-friend>
                     </div>
                 </div>
         </div>
@@ -61,5 +68,5 @@
 @endsection
 
 @section('components')
-    <script src="{{ asset('js/game.js') }}" defer></script>
+    <script src="{{ asset('js/game-list.js') }}" defer></script>
 @endsection

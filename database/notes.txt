@@ -1,5 +1,4 @@
 List of unmigrated db changes:
 
-Added game_user.letters
-Added user_games.letters
-
+x Added game_user.letters
+x Added user_games.letters

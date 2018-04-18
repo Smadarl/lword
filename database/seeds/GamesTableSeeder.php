@@ -24,10 +24,13 @@ class GamesTableSeeder extends Seeder
         $wf = env('WORD_FILE');
         $words = `shuf -n 500 $wf`;
         foreach(explode("\n", $words) as $word) {
-            if ((strlen($word) > $game->max_length) || (strlen($word) < 6)) {
+            if ((strlen($word) > $game->max_length) || (strlen($word) < env('MIN_WORD_LENGTH'))) {
                 continue;
             }
             $chars = count_chars($word, 1);
+            if (max($chars) > $game->max_recurrance) {
+                continue;
+            }
         }
         return $word;
     }

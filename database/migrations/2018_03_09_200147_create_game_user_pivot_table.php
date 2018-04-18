@@ -20,6 +20,7 @@ class CreateGameUserPivotTable extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('word', 20);
             $table->enum('result', ['won', 'loss'])->nullable();
+            $table->string('letters', 160);
         });
     }
 

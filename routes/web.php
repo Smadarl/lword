@@ -29,7 +29,10 @@ Route::post('api/game/{id}/letters', 'GameController@saveLetters');
 Route::post('api/game/{id}/move', 'GameController@store');
 
 Route::get('api/user/info', 'UserController@info');
+Route::get('api/user/requests', 'UserController@requests');
 Route::post('api/user/changepw', 'UserController@changepw');
+Route::post('api/user/friend', 'UserController@addFriend');
+Route::post('api/user/friend_respond', 'UserController@friendRespond');
 
 
 // TODO: fix these

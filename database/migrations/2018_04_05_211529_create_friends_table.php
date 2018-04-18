@@ -16,7 +16,9 @@ class CreateFriendsTable extends Migration
         Schema::create('friends', function (Blueprint $table) {
             $table->integer('user_id');
             $table->integer('friend_id');
-            $table->index(['user_id', 'friend_id']);
+            $table->enum('status', ['requested', 'confirmed', 'rejected']);
+            $table->unique(['user_id', 'friend_id']);
+            $table->index(['friend_id']);
         });
 
         DB::statement("CREATE VIEW `user_friends`  AS
