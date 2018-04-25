@@ -14,6 +14,18 @@
                                 </li>
                             @endforeach
                         </ul>
+                        @if(count($pending))
+                            <h3>Pending games</h3>
+                            <ul>
+                            @foreach($pending as $game)
+                                <li>
+                                    <a href="/game/{{ $game->game_id }}">
+                                        {{ $game->opponent_name }}
+                                    </a>
+                                </li>
+                            @endforeach
+                            </ul>
+                        @endif
                     </div>
 
                     <div class="card-body">

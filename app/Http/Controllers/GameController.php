@@ -22,8 +22,9 @@ class GameController extends Controller
      */
     public function index()
     {
-        $gameList = Auth::user()->game_list();
-        return view('games.index', ['gameList' => $gameList]);
+        $gameList = Auth::user()->game_list('active');
+        $pending = Auth::user()->game_list('pendingForMe');
+        return view('games.index', ['gameList' => $gameList, 'pending' => $pending]);
     }
 
     /**

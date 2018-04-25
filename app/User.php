@@ -35,13 +35,20 @@ class User extends Authenticatable
 
     public function game_list($status = null)
     {
-        if ($status == 'active')
+        if ($status == 'started')
         {
-            return UserGames::fromView()->where('player_id', $this->id)->where('status', '!=', 'finished')->get();
+            return UserGames::fromView()->where('player_id', $this->id)->where('status', 'started')->get();
         }
         else if ($status == 'finished')
         {
             return UserGames::fromView()->where('player_id', $this->id)->where('status', 'finished')->get();
+        }
+        else if ($status == 'pendingForMe') {
+            return Usergames::fromView()
+                ->where('player_id', $this->id)
+                ->where('status', 'pending')
+                ->where('started_by', '!=', $this->id)
+                ->get();
         }
         else
         {
