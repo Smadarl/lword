@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class GameUser extends Model
 {
+    use HasCompositePrimaryKey;
+
     protected $table = 'game_user';
+    protected $primaryKey = ['game_id', 'user_id'];
+    public $incrementing = false;
+    public $timestamps = false;
     protected $fillable = ['game_id', 'user_id', 'word', 'result'];
 
     static public function findPlayerByUserGame(UserGames $userGame)

@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Database\Seeds\GamesTableSeeder;
+use App\Http\Requests\NewGame;
+use App\Http\Requests\AcceptGame;
 
 class GameController extends Controller
 {
@@ -22,9 +25,68 @@ class GameController extends Controller
      */
     public function index()
     {
-        $gameList = Auth::user()->game_list('active');
+        $gameList = Auth::user()->game_list('started');
         $pending = Auth::user()->game_list('pendingForMe');
-        return view('games.index', ['gameList' => $gameList, 'pending' => $pending]);
+        $waiting = Auth::user()->game_list('startedByMe');
+        return view('games.index', ['gameList' => $gameList, 'pending' => $pending, 'waiting' => $waiting]);
+    }
+
+    public function pending(Request $request, $id) {
+        $userGame = Auth::user()->userGame($id);
+        if (!$userGame) {
+            return response()->json(['error' => 'Invalid game id.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        if ($userGame->status != 'pending') {
+            return response()->json(['error' => 'Invalid game state.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        return view('games.pending', ['game' => $userGame]);
+    }
+
+    public function accept(AcceptGame $request, $id) {
+        $userGame = Auth::user()->userGame($id);
+        if (!$userGame) {
+            return response()->json(['error' => 'Invalid game id.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        if ($userGame->started_by == Auth::id()) {
+            return response()->json(['error' => 'Invalid accept request.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        if ($userGame->status != 'pending') {
+            return response()->json(['error' => 'Invalid game state.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        if ($request->input('origination') == 'random') {
+            $word = $this->randomWord($userGame->max_length, $userGame->max_recurrance);
+        } else {
+            $word = $request->input('chooseWord.word');
+        }
+        $gameUser = \App\GameUser::findPlayerByUserGame($userGame);
+        $gameUser->word = $word;
+        $gameUser->save();
+        $game = \App\Game::where('id', $userGame->game_id)->get()->first();
+        $game->status = 'started';
+        $game->started_at = date('Y-m-d H:i:s');
+        $game->save();
+        return ['game' => $game];
+    }
+
+    public function cancel(Request $request, $id) {
+        $userGame = Auth::user()->userGame($id);
+        if (!$userGame) {
+            return response()->json(['error' => 'Invalid game id.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        if ($userGame->status != 'pending') {
+            return response()->json(['error' => 'Invalid game state.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        $gameUser = \App\GameUser::findPlayerByUserGame($userGame);
+        $gameOpp = \App\GameUser::findOpponentByUserGame($userGame);
+        $game = \App\Game::where('id', $userGame->game_id)->get()->first();
+        $gameUser->delete();
+        $gameOpp->delete();
+        $game->delete();
+        return ['message' => 'Game canceled'];
+    }
+
+    public function new() {
+        return view('games.create');
     }
 
     /**
@@ -32,31 +94,20 @@ class GameController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request)
+    public function create(NewGame $request)
     {
-        $this->validate(request(), [
-            'opponentid' => 'required|integer',
-            'maxrecur' => 'required|integer|min:1|max:4',
-            'maxlength' => 'required|integer|min:6|max:12',
-            'origination' => 'required'
-        ]);
-        if ($request->input('origination') == 'choose') {
-            $this->validate(request(), [
-                'myword' => 'required|min:6|max:' . $request->input('maxlength')
-            ]);
-        }
         $gameId = DB::table('games')->insertGetId([
-            'max_length' => $request->input('maxlength'),
-            'max_recurrance' => $request->input('maxrecur'),
+            'max_length' => $request->input('max_length'),
+            'max_recurrance' => $request->input('max_recurrance'),
             'started_by' => Auth::id(),
-            'started_at' => date('Y-m-d H:i:s'),
-            'turn' => array(Auth::id(), $request->input('opponentid'))[rand(0,1)],
+            'created_at' => date('Y-m-d H:i:s'),
+            'turn' => array(Auth::id(), $request->input('opponent_id'))[rand(0,1)],
             'status' => 'pending',
         ]);
-        if ($request->input('origination') == 'choose') {
-            $word = $request->input('myword');
+        if ($request->input('chooseWord.type') == 'choose') {
+            $word = $request->input('chooseWord.word');
         } else {
-            $word = 'internationalization'; // TODO: randomize this
+            $word = $this->randomWord($request->input('max_length'), $request->input('max_recurrance'));
         }
         DB::table('game_user')->insert([
             'game_id' => $gameId,
@@ -65,10 +116,26 @@ class GameController extends Controller
         ]);
         DB::table('game_user')->insert([
             'game_id' => $gameId,
-            'user_id' => $request->input('opponentid'),
+            'user_id' => $request->input('opponent_id'),
             'word' => 'none'
         ]);
-        return Auth::user()->userGame($gameId);
+        return ['game' => Auth::user()->userGame($gameId), 'word' => $word];
+    }
+
+    private function randomWord($maxlen, $maxrecur) {
+        $wf = env('WORD_FILE');
+        $words = `shuf -n 500 $wf`;
+        foreach(explode("\n", $words) as $word) {
+            if ((strlen($word) > $maxlen) || (strlen($word) < env('MIN_WORD_LENGTH')))
+                continue;
+            $chars = count_chars($word, 1);
+            if (!is_array($chars) || (count($chars) === 0))
+                continue;
+            if (max($chars) > $maxrecur)
+                continue;
+            echo $word; exit();
+        }
+        return $word;
     }
 
     /**
@@ -88,11 +155,11 @@ class GameController extends Controller
             return response()->json(['error' => $error])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
         $userGame = Auth::user()->userGame($id);
-        if ($userGame->turn !== Auth::user()->id) {
-            return response()->json(['error' => 'Not your turn.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
-        }
         if (!$userGame) {
             return response()->json(['error' => 'Invalid game id.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        if ($userGame->turn !== Auth::user()->id) {
+            return response()->json(['error' => 'Not your turn.'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
         }
         $opponent = \App\GameUser::findOpponentByUserGame($userGame);
         if (!$opponent) {
@@ -116,17 +183,15 @@ class GameController extends Controller
     public function gameData(Request $request, $id)
     {
         $userGame = Auth::user()->userGame($id);
+        if (substr($request->path(), -1 * strlen('update')) == 'update') {
+            return [
+                'game' => $this->getGameArray($userGame)
+            ];
+        }
         $game = \App\Game::where('id', $id)->get()->first();
         $moves = $game->playerMoves(Auth::user()->id)->get();
         return [
-            'game' => [
-                'id' => $userGame->game_id,
-                'opponentId' => $userGame->opponent_id,
-                'opponent' => $userGame->opponent_name,
-                'maxSize' => $userGame->max_length,
-                'maxRecur' => $userGame->max_recurrance,
-                'turn' => $userGame->turn
-            ],
+            'game' => $this->getGameArray($userGame),
             'letters' => $userGame->letters,
             'moves' => $moves,
             'user' => [
@@ -134,6 +199,18 @@ class GameController extends Controller
                 'name' => Auth::user()->name,
                 'friends' => [],
             ],
+        ];
+    }
+
+    private function getGameArray(\App\UserGames $userGame)
+    {
+        return [
+                    'id' => $userGame->game_id,
+                    'opponentId' => $userGame->opponent_id,
+                    'opponent' => $userGame->opponent_name,
+                    'maxSize' => $userGame->max_length,
+                    'maxRecur' => $userGame->max_recurrance,
+                    'turn' => $userGame->turn
         ];
     }
 
@@ -258,5 +335,15 @@ class GameController extends Controller
     public function destroy(Game $game)
     {
         //
+    }
+
+    public function test()
+    {
+        return view('games.test');
+    }
+
+    public function testPost(NewGame $request) {
+        $validated = $request->validated();
+        return ['Status' => 200, 'message' => "Successfully submitted data"];
     }
 }

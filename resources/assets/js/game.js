@@ -187,10 +187,11 @@ Vue.component('guess-box', {
     },
     methods: {
         onSubmit() {
-            axios.post('/api/game/' + this$store.state.game.id + '/move', {
+            axios.post('/api/game/' + this.$store.state.game.id + '/move', {
                 guess: this.guess
             })
                 .then(response => {
+                    // TODO: fix new move showing up twice in move list
                     this.guess = '';
                     this.$store.commit('addMove', response.data);
                     Event.$emit('newmove', response.data)
@@ -202,11 +203,12 @@ Vue.component('guess-box', {
                 });
         },
         checkTurn() {
-            axios.get('/game/' + this.$store.state.game.id + '/info')
+            axios.get('/api/game/' + this.$store.state.game.id + '/update')
                 .then(response => {
-                    if (response.data.turn == this.$store.state.user.id) {
-                        this.$store.commit('myTurn');
-                    }
+                    console.log(response);
+                    // if (response.data.turn == this.$store.state.user.id) {
+                        this.$store.commit('updateGameData', response.data.game);
+                    // }
                 })
                 .catch(error => {
                     this.errors = error.response.data;

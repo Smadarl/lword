@@ -5,28 +5,19 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">Dashboard</div>
-
-                <!-- <rob-test-box header="Test component">
-                    This is just a little test
-                </rob-test-box> -->
-
                 <div class="card-body">
                     @if (session('status'))
                         <div class="alert alert-success">
                             {{ session('status') }}
                         </div>
                     @endif
+                    <friends></friends>
 
-                    <a href="games">Current games</a>
-                    <br/>
-                    <a href="game/create">New Game</a>
-                    <br/>
-                    <a href="connect/create">New Connections Game</a>
-                    <br/>
-                    <a href="user/friends">Friends list</a>
-                    <br/>
-                    <!-- <friends></friends> -->
+                    <pending-friend-requests>
+                    </pending-friend-requests>
+
+                    <add-friend>
+                    </add-friend>
                 </div>
             </div>
         </div>

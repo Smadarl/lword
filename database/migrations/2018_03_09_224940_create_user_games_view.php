@@ -19,21 +19,28 @@ class CreateUserGamesView extends Migration
                    `g`.`max_recurrance` AS `max_recurrance`,`g`.`started_by` AS `started_by`,
                    `g`.`started_at` AS `started_at`,`g`.`turn` AS `turn`,`g`.`status` AS `status`,
                    `g`.`created_at` AS `created_at`,`g`.`updated_at` AS `updated_at`,
-                   `p2`.`id` AS `opponent_id`,`p2`.`name` AS `opponent_name`, `gp1`.`letters` AS `letters`
+                   `p2`.`id` AS `opponent_id`,`p2`.`name` AS `opponent_name`, `gp1`.`letters` AS `letters`,
+                   count(`um`.`guess`) AS `moves`
             from
             (
                 (
                     (
                         (
-                            `users` `p1`
-                                join `game_user` `gp1` on ((`gp1`.`user_id` = `p1`.`id`))
+                            (
+                                `users` `p1`
+                                    join `game_user` `gp1` on ((`gp1`.`user_id` = `p1`.`id`))
+                            )
+                            join `games` `g` on ((`g`.`id` = `gp1`.`game_id`))
                         )
-                        join `games` `g` on ((`g`.`id` = `gp1`.`game_id`))
+                        join `game_user` `gp2` on (( (`gp2`.`game_id` = `g`.`id`) and (`gp2`.`user_id` <> `p1`.`id`) ))
                     )
-                    join `game_user` `gp2` on (( (`gp2`.`game_id` = `g`.`id`) and (`gp2`.`user_id` <> `p1`.`id`) ))
+                    join `users` `p2` on ((`p2`.`id` = `gp2`.`user_id`))
                 )
-                join `users` `p2` on ((`p2`.`id` = `gp2`.`user_id`))
+                left join `user_moves` `um` ON ((`um`.`game_id` = `gp2`.`game_id`) and (`um`.`user_id` = `p1`.`id`))
             )
+            group by `g`.`id`, `p1`.`id`, `g`.`max_length`, `g`.`max_recurrance`, `g`.`started_by`,
+                     `g`.`started_at`, `g`.`turn`, `g`.`status`, `g`.`created_at`, `g`.`updated_at`,
+                     `p2`.`id`, `p2`.`name`, `gp1`.`letters`
         ) ;");
     }
 

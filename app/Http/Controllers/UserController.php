@@ -17,9 +17,17 @@ class UserController extends Controller
         $this->middleware('auth');
     }
 
-    public function friends(Request $request)
+    public function friends()
     {
+        return view('user.friends');
+    }
+
+    public function apiFriends() {
         return Auth::user()->friends();
+    }
+
+    public function inviteFriend(Request $request) {
+
     }
 
     public function info(Request $request)
@@ -77,5 +85,16 @@ class UserController extends Controller
         $user->save();
 
         return ['message' => 'New password saved'];
+    }
+
+    public function friendGames(Request $request, $friendId)
+    {
+        $friend = DB::table('friends')->where('user_id', Auth::id())->where('friend_id', $friendId)->get()->first();
+        if (!$friend)
+        {
+            return response()->json(['error' => 'Invalid friend'])->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY, Response::$statusTexts[Response::HTTP_UNPROCESSABLE_ENTITY]);
+        }
+        $list = Auth::user()->game_list(null, $friendId);
+        return ['game_list' => $list];
     }
 }

@@ -33,27 +33,34 @@ class User extends Authenticatable
         return $this->hasMany('App\Game')->withPivot('word');
     }
 
-    public function game_list($status = null)
+    public function game_list($status = null, $opponentId = null)
     {
-        if ($status == 'started')
+        if ($status)
         {
-            return UserGames::fromView()->where('player_id', $this->id)->where('status', 'started')->get();
+            if ($status == 'pendingForMe') {
+                return UserGames::fromView()
+                    ->where('player_id', $this->id)
+                    ->where('status', 'pending')
+                    ->where('started_by', '!=', $this->id)
+                    ->get();
+            } else if ($status == 'startedByMe') {
+                return UserGames::fromView()
+                    ->where('player_id', $this->id)
+                    ->where('status', 'pending')
+                    ->where('started_by', '=', $this->id)
+                    ->get();
+            }
+            if ($opponentId)
+            {
+                return UserGames::fromView()->where('player_id', $this->id)->where('opponent_id', $opponentId)->where('status', $status)->get();
+            }
+            return UserGames::fromView()->where('player_id', $this->id)->where('status', $status)->get();
         }
-        else if ($status == 'finished')
+        else if ($opponentId)
         {
-            return UserGames::fromView()->where('player_id', $this->id)->where('status', 'finished')->get();
+            return UserGames::fromView()->where('player_id', $this->id)->where('opponent_id', $opponentId)->get();
         }
-        else if ($status == 'pendingForMe') {
-            return Usergames::fromView()
-                ->where('player_id', $this->id)
-                ->where('status', 'pending')
-                ->where('started_by', '!=', $this->id)
-                ->get();
-        }
-        else
-        {
-            return UserGames::fromView()->where('player_id', $this->id)->get();
-        }
+        return UserGames::fromView()->where('player_id', $this->id)->get();
     }
 
     public function game($gameId)
