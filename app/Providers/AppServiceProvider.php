@@ -46,8 +46,10 @@ class AppServiceProvider extends ServiceProvider
         Validator::replacer('max_dup_chars', function($message, $attribute, $rule, $parameters) {
             return str_replace(':value', $parameters[0], $message);
         });
-	    Schema::defaultStringLength(191);
-        //
+        Schema::defaultStringLength(191);
+        if (env('APP_ENV') !== 'local') {
+            $this->app['request']->server->set('HTTPS', true);
+        }
     }
 
     /**
